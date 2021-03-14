@@ -1,20 +1,84 @@
 # include <iostream>
 # include <cmath>
+# include <vector>
 
 class value {
     public:
         double head; // magnitude of phasor or real of rectangle
         double tail; // angle of phasor or imaginary of rectangle
         bool type; // true for phasor and false for rectangle
+        bool loaded; // true when the value has been loaded
 };
 
+// asks user which opperation to perform
+void calculator(value &operand_1, value &operand_2, value &ouput, std::vector<value> &memory) {
+    std::string command; // strign to store user command
+    bool running = true;
+
+    check_if_operands_loaded(operand_1,operand_2);
+
+    do {
+        std::cout<<"matheater> ";
+        std::cin>>command;
+        running = false;
+        if (command == "add")
+        {
+            add(operand_1, operand_2, ouput);
+        }
+        else if (command == "sub")
+        {
+            subtract(operand_1, operand_2, ouput);
+        }
+        else if (command == "mul")
+        {
+            multiply(operand_1, operand_2, ouput);
+        }
+        else if (command == "div")
+        {
+            divide(operand_1, operand_2, ouput);
+        }
+        else {
+            running = true;
+        } 
+    } while (running);
+    memory.push_back(ouput);
+}
+
+// function checks if opperands are loaded
+int check_if_operands_loaded(value opperator_1, value opperator_2){
+    if (opperator_1.loaded&&opperator_2.loaded == false)
+    {
+        return 3;
+    }
+    else if (opperator_1.loaded == false)
+    {
+        return 1;
+    }
+    else if (opperator_2.loaded == false)
+    {
+        return 2;
+    }
+    else {
+        return 0;
+    }
+}
 
 // user inputs a value
-void input_value(value &input) {
-    std::cout<<"type > ";
+void input_value(value &input, std::vector<value> &operands_memory) {
+    // loads the input
+    input.loaded = true;
+    std::string input_type_choice;
     
-    // user will enter 1 to create a phasor and 0 for a rectangle
-    std::cin>>input.type;
+    // asks user what type of value to enter
+    std::cout<<"type > ";   
+    std::cin>>input_type_choice;
+    if (input_type_choice == "p") {
+        input.type = true;
+    }
+    else if (input_type_choice == "r") {
+        input.type = false;
+    }
+
     if (input.type)
     {
         std::cout<<"Magnitude = "<<std::endl;
@@ -23,17 +87,18 @@ void input_value(value &input) {
         std::cin>>input.tail;
     }
     
-    if (!input.type)
+    else if (!input.type)
     {
-        std::cout<<"Real = "<<std::endl;
+        std::cout<<"Real = ";
         std::cin>>input.head;
-        std::cout<<"Imaginary = "<<std::endl;
+        std::cout<<"Imaginary = ";
         std::cin>>input.tail;
     }
+    // stores the inputed value in a vector
+    operands_memory.push_back(input);
 }
 
 void switch_to_phasor(value &to_switch) {
-    
     // transition varriables
     double magnitude, angle;
     
@@ -79,6 +144,7 @@ void multiply(value multiplicant, value multiplier, value &output) {
     // do calculations and return output
     output.head = multiplicant.head * multiplier.head;
     output.tail = multiplicant.tail + multiplier.tail;
+    output.type = true;
 }
 
 // division function
@@ -93,9 +159,10 @@ void divide(value dividend, value divisor, value &output) {
     // do calculations and return output
     output.head = dividend.head / divisor.head;
     output.tail = dividend.tail - divisor.tail;
+    output.type = true;
 }
 
-void add(value augend, value addend, value &output) {
+void add(value &augend, value &addend, value &output) {
     // switch values to phasor to do division;
     if (augend.type) {
         switch_to_rectangle(augend);
@@ -106,9 +173,10 @@ void add(value augend, value addend, value &output) {
     // do calculations and return output
     output.head = augend.head + addend.head;
     output.tail = augend.tail + addend.tail;
+    output.type = false;
 }
 
-void subtract(value munuend, value subtrahend, value &output) {
+void subtract(value &munuend, value &subtrahend, value &output) {
     // switch values to phasor to do division;
     if (munuend.type=true) {
         switch_to_rectangle(munuend);
@@ -119,19 +187,24 @@ void subtract(value munuend, value subtrahend, value &output) {
     // do calculations and return output
     output.head = munuend.head - subtrahend.head;
     output.tail = munuend.tail - subtrahend.tail;
+    output.type = false;
 }
 
 // prints a value to the screen
-void print_value(value to_print) {
-    
+void print_value(value &to_print) {
+   
     // checks if the value is in phasor form or rectangle form
-    if (to_print.type=true) {
-        std::cout<<"Magnitude: "<<to_print.head<<std::endl;
+    if (to_print.type==true) {
+        std::cout<<std::endl<<"Magnitude: "<<to_print.head<<std::endl;
         std::cout<<"Angle: "<<to_print.tail<<std::endl;
     }
-    else if (to_print.type=false) {
-        switch_to_rectangle(to_print);
+    else if (to_print.type==false) {
         std::cout<<"Real: "<<to_print.head<<std::endl;
         std::cout<<"Imaginary: "<<to_print.tail<<std::endl;
     }
+}
+
+// clears opperands
+void clear_operands(value &operand_to_clear) {
+    operand_to_clear.loaded = false;
 }
