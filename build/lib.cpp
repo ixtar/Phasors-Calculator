@@ -1,6 +1,8 @@
+#pragma once
 # include <iostream>
 # include <cmath>
 # include <vector>
+#include"../headers/lib.h"
 
 class value {
     public:
@@ -8,63 +10,20 @@ class value {
         double tail; // angle of phasor or imaginary of rectangle
         bool type; // true for phasor and false for rectangle
         bool loaded; // true when the value has been loaded
+
+        void load_value(value &to_load, std::vector <value> memory) {
+            std::string where_to_get_value;
+            std::string index_if_from_vector;
+            std::cout<<"loader> ";
+            std::cin>>where_to_get_value>>index_if_from_vector;
+            if (where_to_get_value=="mem") {
+                input_value(to_load, memory);
+            }
+        }
 };
 
-// asks user which opperation to perform
-void calculator(value &operand_1, value &operand_2, value &ouput, std::vector<value> &memory) {
-    std::string command; // strign to store user command
-    bool running = true;
-
-    check_if_operands_loaded(operand_1,operand_2);
-
-    do {
-        std::cout<<"matheater> ";
-        std::cin>>command;
-        running = false;
-        if (command == "add")
-        {
-            add(operand_1, operand_2, ouput);
-        }
-        else if (command == "sub")
-        {
-            subtract(operand_1, operand_2, ouput);
-        }
-        else if (command == "mul")
-        {
-            multiply(operand_1, operand_2, ouput);
-        }
-        else if (command == "div")
-        {
-            divide(operand_1, operand_2, ouput);
-        }
-        else {
-            running = true;
-        } 
-    } while (running);
-    memory.push_back(ouput);
-}
-
-// function checks if opperands are loaded
-int check_if_operands_loaded(value opperator_1, value opperator_2){
-    if (opperator_1.loaded&&opperator_2.loaded == false)
-    {
-        return 3;
-    }
-    else if (opperator_1.loaded == false)
-    {
-        return 1;
-    }
-    else if (opperator_2.loaded == false)
-    {
-        return 2;
-    }
-    else {
-        return 0;
-    }
-}
-
 // user inputs a value
-void input_value(value &input, std::vector<value> &operands_memory) {
+void input_value(value &input, std::vector<value> &operands_memory, std::vector<value> &operands_history) {
     // loads the input
     input.loaded = true;
     std::string input_type_choice;
@@ -74,21 +33,13 @@ void input_value(value &input, std::vector<value> &operands_memory) {
     std::cin>>input_type_choice;
     if (input_type_choice == "p") {
         input.type = true;
+        std::cout<<"Magnitude = ";
+        std::cin>>input.head;
+        std::cout<<"Angle = ";
+        std::cin>>input.tail;
     }
     else if (input_type_choice == "r") {
         input.type = false;
-    }
-
-    if (input.type)
-    {
-        std::cout<<"Magnitude = "<<std::endl;
-        std::cin>>input.head;
-        std::cout<<"Angle = "<<std::endl;
-        std::cin>>input.tail;
-    }
-    
-    else if (!input.type)
-    {
         std::cout<<"Real = ";
         std::cin>>input.head;
         std::cout<<"Imaginary = ";
@@ -97,6 +48,8 @@ void input_value(value &input, std::vector<value> &operands_memory) {
     // stores the inputed value in a vector
     operands_memory.push_back(input);
 }
+
+
 
 void switch_to_phasor(value &to_switch) {
     // transition varriables
@@ -207,4 +160,110 @@ void print_value(value &to_print) {
 // clears opperands
 void clear_operands(value &operand_to_clear) {
     operand_to_clear.loaded = false;
+}
+
+// asks user which opperation to perform
+void calculator(value &operand_1, value &operand_2, value &ouput, std::vector<value> &history, std::string command) {
+    bool running = true;
+    int are_operands_loaded = check_if_operands_loaded(operand_1,operand_2);
+    if (are_operands_loaded == 0) {
+        do {
+                running = false;
+                if (command == "add")
+                {
+                    add(operand_1, operand_2, ouput);
+                }
+                else if (command == "sub")
+                {
+                    subtract(operand_1, operand_2, ouput);
+                }
+                else if (command == "mul")
+                {
+                    multiply(operand_1, operand_2, ouput);
+                }
+                else if (command == "div")
+                {
+                    divide(operand_1, operand_2, ouput);
+                }
+                else {
+                    running = true;
+                } 
+            } while (running);
+            history.push_back(ouput);
+        }
+    // checks which opperand is not loaded
+    else if(are_operands_loaded == 1) {
+        // load operand one
+    }
+    else if(are_operands_loaded == 2) {
+        // load operand two
+    }
+    else if(are_operands_loaded == 3) {
+        // load both operands
+    }
+}
+
+
+// function checks if opperands are loaded
+int check_if_operands_loaded(value opperator_1, value opperator_2){
+    if (opperator_1.loaded&&opperator_2.loaded == false)
+    {
+        return 3;
+    }
+    else if (opperator_1.loaded == false)
+    {
+        return 1;
+    }
+    else if (opperator_2.loaded == false)
+    {
+        return 2;
+    }
+    else {
+        return 0;
+    }
+}
+
+void loader(value &operand, value &output, std::vector <value> &memory, std::vector <value> &history) {
+    std::string command, target;
+    int index;
+    std::cin>>command>>target>>index;
+    if (command=="lda") {
+        // loads a value from memory
+        // note index of memory is defined 0 for the last added value to the vector
+            if(target=="mem") {
+                operand = memory[memory.size() - index];
+            }
+            // loads a value from history
+            else if(target=="his") {
+                operand = history[history.size() - index];
+            }
+            else if(target=="out") {
+                operand = output;
+            }
+        }
+    //load operands from input device
+    else if(command =="inp") {
+        input_value(operand, memory, history);
+    }
+}
+
+void command(value &operand_1, value &operand_2, value &output, std::vector <value> &memory, std::vector <value> &history) {
+    std::string command, target;
+    std::cout<<std::endl<<"wats popin? > ";
+    std::cin>>command>>target;
+    if (command=="calc") {
+        calculator(operand_1,operand_2, output,history, target);
+    }
+    else if (command=="1") {
+        loader(operand_1, output,memory,history);
+    }
+    else if (command=="2") {
+        loader(operand_2,output,memory,history);
+    }
+    else if (command=="list mem") {
+        for(int i=memory.size();i>=0;i--) {
+            print_value(memory[i]);
+            std::cout<<std::endl;
+        }
+    }
 }
